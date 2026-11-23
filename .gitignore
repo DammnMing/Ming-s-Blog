@@ -1,51 +1,26 @@
 # dependencies
 node_modules/
-/.pnp
-.pnp.js
+.pnpm-bootstrap/
 
-# next.js
-/.next/
-/out/
-next-env.d.ts
+# build output
+dist/
+*.tsbuildinfo
 
-# production
-/build
+# env
+.env
+.env.*
+!.env.example
+
+# test
+coverage/
+
+# drizzle
+.drizzle/
 
 # misc
 .DS_Store
 Thumbs.db
-*.pem
-
-# IDE
-.vscode/
-.idea/
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env*.local
-.env
-
-# local content edits (admin 在本地开发时写入的覆盖内容)
-data/content.local.json
-node_modules/.npm-cache/
-npm-install.log
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-
-# local db & uploads
-/data/portfolio.db
-/data/portfolio.db-wal
-/data/portfolio.db-shm
-/public/uploads/*
-!/public/uploads/.gitkeep
-
-# logs
 *.log
+
+# local dev db (TECH-001 SQLite)
+data/*.db*

@@ -1,83 +1,63 @@
-# AGENTS.md — 智能体工作规则（Ming-s-Blog）
+# AGENTS.md — 智能体工作规则（Ming-s-Blog · V0.4）
 
-> 本文件由 Harness 自动加载（AGENTS.md 兼容格式），**仅存放智能体在本仓库工作时的规则与约束**。项目介绍、架构、部署等事实性内容见 `README.md`；不覆盖系统提示词与用户的直接指令，更具体的规则优先于笼统规则。
+> 本文件由 Harness 自动加载，**仅存放智能体在本仓库工作时的规则与约束**。项目全景见 [`README.md`](README.md)；不覆盖系统提示词与用户直接指令，更具体的规则优先于笼统规则。
 
 ## 文档索引
 
 | 文档 | 内容 |
 |---|---|
-| `README.md` | 项目全景：背景、功能、技术栈、架构、部署、使用、贡献指南 |
-| `docs/API契约.md` | **仅覆盖 V0.02**（根目录 Next.js 应用）的 HTTP API 接口契约（修改 V0.02 API 的必读文档） |
-| `platform/docs/INDEX.md` | V0.03 文档库入口（PRD / PLAN / TECH / OPS / API） |
-| `platform/docs/06-api/API-001-契约总则.md` | **仅覆盖 V0.03**（`platform/apps/api` Hono 服务）的 API 契约总则，按域拆分为 API-001~006 |
-| `platform/docs/03-tech/TECH-001.md` | V0.03 架构决策 |
-| `platform/docs/04-ops/OPS-001.md` | V0.03 部署与更新流程 |
+| `README.md` | 项目全景：V0.4 双风格展示站架构、命令、部署与 V0.02 归档说明 |
+| `docs/INDEX.md` | **文档库总入口**（由 `pnpm docs:index` 自动生成，勿手改） |
+| `docs/01-product/PRD-002-双风格个人展示站与演进路线.md` | V0.4 双风格个人展示站需求与一二三期演进路线 |
+| `docs/05-decisions/DEC-001-V0.2归档与V0.4转正决策.md` | V0.02 Git 归档与 V0.4 提升根目录决策记录 |
+| `docs/03-tech/TECH-001-部署架构调整-低内存原生部署.md` | 全栈平台低内存原生部署架构（二/三期） |
+| `docs/04-ops/OPS-001-部署与更新手册.md` | 阿里云 ECS 部署、更新与回滚手册 |
+| `docs/06-api/API-001-契约总则.md` | `apps/api`（Hono 服务）API 契约总则（API-001 ~ API-006） |
 
-> ⚠️ **版本区分（勿混淆）**：本仓库存在两套完全独立的 API——**V0.02**（根目录 Next.js `app/api/*`，契约见 `docs/API契约.md`）与 **V0.03**（`platform/apps/api` 的 Hono 服务，契约见 `platform/docs/06-api/`，入口 API-001）。两者技术栈、路由、鉴权均不同，禁止跨版本套用契约或修改指引。
+> 历史版本提示：V0.02（Next.js + Vercel Blob）已永久归档至 `archive/v0.2` 分支与 `V0.02` 标签；当前主分支 `main` 唯一主项目为 V0.4（pnpm Monorepo）。
+
+---
 
 ## 行为铁律（最高优先级）
 
-1. **Trae 的新页面设计是地基，必须保留**——只能改"页面编辑与数据存储方式"，绝不把页面回退成初始版本，不重写设计系统组件。
-2. **存储 = Vercel Blob 单文档**（`lib/store.js`，content.json）；禁止引入数据库/本地持久化（`data/content.local.json` 仅本地无 token 时降级，已 gitignore）。
-3. **保存即生效**：公开页服务端动态渲染（`force-dynamic`）+ 客户端 fetch，禁止把内容烤进构建产物。
-4. **任务前必做 PRD 环节**：见「决策流程与交互协议」。
+1. **双风格视觉地基必须保留，严禁回退**：
+   - **AIGC 漫剧制片视角（`aigc`）**：宣纸暖白（`#F6F4EF`）× 炭墨黑（`#141413`）× 暗朱砂红（`#C84B31`）《VOGUE / GQ》大刊编辑风格。
+   - **全栈开发工程师视角（`dev`）**：深空午夜蓝黑（`#070B14` / `#0D1424`）× 电光蓝（`#3B82F6` / `#60A5FA`）硬核工程风格。**严禁引入或回退 `emerald` 荧光绿**。
+2. **打印与主题基座不可破坏**：必须完整保留 `apps/web/src/index.css` 中的 `:root` 主题令牌（供二/三期使用）与 `@media print`（`.print-resume-sheet` 纯白 A4 打印一致性内核）。
+3. **底层平台路由只留不删**：`/login`、`/register`、`/app/*`、`/admin`、`/r/:slug` 及 `apps/api` 为二/三期预留基座，未经明确指示不得删除。
+4. **隐私与脱敏红线**：严禁在代码、文案或文档中写入用户手机号，严禁暴露任何商业私有项目的内部域名、AppID、测试口令或私密仓库链接。
+
+---
 
 ## 决策流程与交互协议
 
-- **任务启动前**：根据上下文与用户输入**推断用户意图** → 润色补充（澄清歧义、补全必要信息）→ 输出「推测意图简述」→ **等待用户确认后，才能进入构建/执行环节**。
-- **方案分歧时**：存在多种合理方案（视觉/架构/技术选型）必须列出选项、说明取舍并给出推荐，交由用户决策，不擅自拍板。
-- **执行过程中**：关键节点简短汇报进展；遇到错误或阻塞立即上报，附原因分析与替代方案，不盲目重试同一动作。
-- **改动范围**：只做任务要求的事，不擅自扩大范围；与任务无关的"顺手改进"一律不做。
-- **任务完成时**：给出验证结果摘要（构建/回归结论），未验证不得宣称完成。
+- **任务启动前**：推断用户意图 → 澄清歧义 → 输出「推测意图简述」→ **等待用户确认后**再进入构建或修改。
+- **方案分歧时**：存在多种合理方案（视觉/架构/选型）时，用大白话说明选项「是什么、好处、坏处、什么情况下选它」，给出推荐与理由，由用户拍板。
+- **涉及高影响操作须单独确认**：新增依赖、费用、安全、数据不可逆、推送 `origin/main`（触发 Vercel 生产部署）或变更 VPS 服务器配置前，必须单独列出并获确认。
+- **改动范围**：只做任务要求的事，不擅自扩大范围或顺手重做无关页面。
+- **任务完成时**：提供实际执行过的验证结果摘要，未验证不得宣称完成。
 
-## 分支与版本操作规则
+---
 
-- `main` = V0.02 冻结版 + Vercel 生产分支，**推送即生产部署**：任何 V0.03 内容不得合并/推送到 main。
-- 根目录只允许文档性改动；**不得**对根目录做业务功能开发或架构调整。
-- V0.03 开发全部在 `v0.3` 分支的 `platform/` 目录进行，就绪后走 PR/切换流程合入 main。
+## 任务执行与验证标准
 
-## 任务执行标准
+### 改完代码必跑验证
 
-### 验证流程（改完代码必做）
+1. **文档改动后**：运行 `pnpm docs:index` 更新索引，并确认 `pnpm docs:check` 通过。
+2. **前端/共享包改动后**：
+   - `pnpm typecheck`（全仓类型检查零错误）
+   - `pnpm build:web`（或 `pnpm build`）正常产出构建产物
+   - 全局确认未误引入 `emerald` 类名（若涉及样式修改）
+3. **后端/全量改动后**：额外运行 `pnpm test` 确保 Vitest 单元测试全绿。
 
-1. `npm run build` + `npm run start` 启动生产模式
-2. 构建产物检查：所有路由应显示 `ƒ (Dynamic)`
-3. curl 功能回归，按序覆盖：登录 → 改设置 → 验证首页 footer 实时生效 → 项目 CRUD → 改密 → 上传守卫
-4. 修改 V0.02 API 的任务：对照 `docs/API契约.md` 逐项核对契约未被破坏，并同步更新契约文档（V0.03 API 不适用此文档，见文档索引「版本区分」）
+### Windows 沙箱构建避坑
 
-### 命令规范（Windows + 沙箱环境）
+- 若 Windows 系统临时目录偶发 `Access is denied`，可在构建命令中临时将 `TEMP` / `TMP` 指向仓库内临时目录（如 `.tmp`），并在构建完成后立即清理，绝不将临时目录提交进 Git。
+- 本仓库所有中文源码与 Markdown 文档固定使用 **UTF-8 无 BOM** 编码。
 
-```bash
-# 开发（沙箱内用 managed node 启动）
-node.exe node_modules/next/dist/bin/next dev
-
-# 沙箱内 npm（npm 缓存写入受限时）
-cmd /c "node.exe node_modules/npm/bin/npm-cli.js install --cache node_modules\.npm-cache --no-audit --no-fund 1>log 2>&1"
-```
-
-- 本地测试 curl POST JSON：用单引号 `-d '{"password":"..."}'`（反斜杠转义会破坏 JSON）。
-
-## 代码修改红线
-
-- **勿改 `lib/auth.js`**：不得移除/绕过 `ensureSecret()` 守卫；生产缺 `AUTH_SECRET` 报错是预期行为，修复方式是配置环境变量，不是改代码。
-- **勿动 `node_modules/` 与 `.next/`** 内的任何东西。
-- **勿建 `tailwind.config.js`**：Tailwind v4 主题在 `app/globals.css` 的 `@theme`。
-- framer-motion 组件必须 `"use client"`。
-- Next.js 16 动态路由 handler 的 `params` 是 Promise：`const { id } = await params`，`params?.id` 会得 undefined。
-- 服务端读内容（Footer/contact 等）必须 `async + await + force-dynamic`，否则把旧数据烤进构建产物。
-- `lib/store.js` 内存缓存（2s TTL）不能改成永久化：页面渲染与 API 路由是独立 bundle，永久缓存会导致保存后另一侧读旧值。
-- 保持 `getDoc()` 容错语义：任何存储异常不得抛出到页面渲染层，站点必须照常渲染。
-
-## 错误处理与常见坑
-
-- 生产报 `服务初始化失败：[auth] 生产环境必须显式设置 AUTH_SECRET...` → 检查 Vercel 环境变量，勿改代码。
-- 上传接口返回 500 且提示缺 token → `BLOB_READ_WRITE_TOKEN` 未配置，属预期守卫行为。
-- Vercel Hobby 函数请求体约 4.5MB 上限：大视频上传失败先压缩，而非调大限制。
-- 命令连续失败（权限/缓存受限）→ 改用「命令规范」中的沙箱命令形式，仍失败则上报用户。
+---
 
 ## 部署与运维协作规则
 
-- **main 分支操作需用户明确指令**：推送/合并到 main 即触发 Vercel 生产部署。
-- **V0.03 服务器操作**：VPS 登录 `ssh shouer`（服务器详情见 `README.md`「部署指南」）；部署、更新、回滚严格遵循 `platform/docs/04-ops/OPS-001.md`，不得自创流程。
-- better-sqlite3 等原生模块必须在 Linux 服务器上执行 `npm install --omit=dev` 安装，不得上传本地编译产物。
-- 生产环境变量（`AUTH_SECRET` / `BLOB_READ_WRITE_TOKEN`）的配置与轮换须经用户确认。
+- **Vercel 主站**：`main` 分支绑定 Vercel 自动生产部署，通过根目录 `vercel.json` 仅安装并构建 `@platform/web`。推送 `main` 前必须完成构建校验并获用户确认。
+- **VPS 服务器（二/三期）**：阿里云 ECS 登录 `ssh shouer`，部署、更新、回滚严格遵循 `docs/04-ops/OPS-001-部署与更新手册.md` 与 `deploy/deploy.sh`；`better-sqlite3` 等原生模块必须在 Linux 服务器上执行 `npm install --omit=dev`，不得上传 Windows 本地编译产物。

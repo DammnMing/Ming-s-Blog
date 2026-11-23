@@ -1,153 +1,117 @@
-# 李佳铭个人博客
+# SUBMING · 李佳铭个人展示站与简历平台（V0.4）
 
-> AIGC 漫剧制片 / 全栈开发工程师个人作品集网站
+> **AIGC 漫剧制片 × 全栈开发工程师** 双风格个人主页、作品集与可打印正式简历，面向未来可扩展为公开多用户简历平台。
 
-基于 Next.js 16 + React 19 + Tailwind CSS v4 的个人博客与作品集展示网站，含 Memphis 复古风格全新设计。展示内容（个人资料 / 双版简历 / 作品集）可在线编辑，**保存即生效，无需重新部署**。
+- **当前版本**：`v0.4.0`（pnpm Monorepo，已正式提升至仓库根目录）
+- **历史版本归档**：V0.02（原 Next.js 16 + Vercel Blob 单体版）已通过 Git 分支 `archive/v0.2` 与标签 `V0.02` 永久归档。
 
-## 项目背景与版本状态
+---
 
-本项目从个人作品集网站（V0.02）起步，正在扩展为简历公开平台（V0.03）：
+## 核心特性（V0.4 第一期）
 
-| 版本 | 状态 | 分支 | 说明 |
-|---|---|---|---|
-| V0.02 | 已冻结发布（tag `v0.2.0`），Vercel 生产运行 | `main` | 个人作品集网站（本仓库根目录） |
-| V0.03 | 开发中 | `v0.3`（代码位于 `platform/` 目录） | 简历公开平台：用户注册 → 编辑简历 → 专属链接展示 → 导出/打印（Word / PDF / 直接打印） |
+- **双视角即时切换**：顶部与首屏支持一键切换 **AIGC 漫剧制片** 与 **全栈开发工程师** 视角，整站视觉体系与叙事重心同步切换：
+  - **AIGC 漫剧制片视角**：暖白宣纸微肌理（`#F6F4EF`）× 炭墨黑 × 暗朱砂红（`#C84B31`）大刊编辑风格，含巨型刊头 `SUBMING`、满出血 4 帧换刊封面、左右交替镇馆跨页、粘性人物专访与视觉年表。
+  - **全栈开发工程师视角**：深空午夜蓝黑（`#070B14` / `#0D1424`）× 电光蓝（`#3B82F6` / `#60A5FA`）硬核工程风格，含双视图工作台（3 大工程系统切换 + 实机画面/4 层架构拓扑一键切换）、纯工程镇馆跨页与蓝黑光轨收尾。
+- **作品集与媒体预留（`/portfolio`）**：支持 `漫剧作品` / `全栈工程` 二级菜单分类筛选与详情弹窗（支持 `Esc` 关闭，已预留原生 `<video>` 播放器以对接阿里云 OSS + CDN）。
+- **双岗位可打印简历（`/resume`）**：面向 AIGC 漫剧制片与全栈开发工程师的双版本正式简历，内置 `@media print` 纯白 A4 打印一致性内核。
+- **底层平台能力保留（二/三期演进基座）**：完整保留 `/login`、`/register`、`/app/*`、`/admin`、`/r/:slug` 与 Hono + SQLite（Drizzle）后端接口，后续可平滑恢复在线简历编辑与多用户公开分享平台。
 
-- `main` 分支是 Vercel 生产部署分支，推送即自动部署
-- V0.03 就绪后通过 PR / 切换流程合入 main
-- 智能体协作规则见 `AGENTS.md`；V0.03 文档库入口 `platform/docs/INDEX.md`
+---
 
-## 功能特性
+## 仓库目录结构
 
-- **首页**：Hero 个人介绍 + 精选作品 + 技能概览 + 经历时间线（Memphis 复古风格）
-- **简历页**（`/resume`）：AIGC 漫剧制片版 / 全栈开发工程师版双版本切换，支持打印
-- **作品集页**（`/portfolio`）：AIGC 漫剧 + 开发项目分类筛选展示
-- **联系页**（`/contact`）：邮箱 / GitHub / 微信号 / 微信二维码
-- **个人中心**（`/settings`）：登录后可在线编辑个人资料、双版简历、作品集（增删改）、登录密码、上传图片/视频
-
-## 技术栈
-
-- **框架**：Next.js 16（App Router）+ React 19 + Tailwind CSS v4（`app/globals.css`：`@import "tailwindcss"` + `@theme`，无 tailwind.config）
-- **UI**：framer-motion（动画）+ react-icons + clsx + tailwind-merge，Memphis 设计系统组件（`components/`）
-- **认证**：jose（JWT session，`AUTH_SECRET`）+ bcryptjs（密码哈希）
-- **存储**：Vercel Blob（内容与媒体存储，`@vercel/blob` 2.8）
-- **路径别名**：`jsconfig.json` 中 `@/*` → 项目根
-
-## 架构设计
-
-### 数据与存储
-
-```
-Vercel Blob 上的 content.json（单文档，含 admin/settings/resume/projects）
-        ↑ 读写
-lib/store.js（Blob 读写 + 本地文件降级）
-   ├── lib/settings.js    个人资料 / 简历
-   ├── lib/projects.js    作品集 CRUD
-   ├── lib/users.js       管理员账号 + 登录限流
-   └── /api/* 路由（settings / projects / auth / upload）
-        ↑ fetch
-前端组件（settingsStore / projectsStore，客户端 30s 缓存）
+```text
+My-Blog/
+├── apps/
+│   ├── web/                 # Vite 7 + React 19 + Tailwind CSS v4 前端应用
+│   │   ├── public/          # 定制视觉大片与静态资源
+│   │   └── src/             # 双风格首页、作品集、正式简历、工作台页面与组件
+│   └── api/                 # Hono + SQLite(Drizzle) 后端 API 服务（二/三期用）
+├── packages/
+│   ├── shared/              # 共享类型、Drizzle schema、Zod 校验与工具
+│   └── ui/                  # 主题令牌（5 套）与打印/排版基础组件
+├── docs/                    # 文档库（入口：docs/INDEX.md，由 pnpm docs:index 自动生成）
+│   ├── 01-product/          # 产品需求文档（PRD-001 / PRD-002）
+│   ├── 02-plans/            # 开发阶段规划（PLAN-001）
+│   ├── 03-tech/             # 技术方案（TECH-001 低内存原生部署架构）
+│   ├── 04-ops/              # 部署与更新手册（OPS-001）
+│   ├── 05-decisions/        # 架构决策记录（DEC-001）
+│   └── 06-api/              # 平台侧 API 契约（API-001 ~ API-006）
+├── deploy/                  # 阿里云 ECS 原生部署脚本与 systemd / nginx 模板
+├── scripts/                 # 自动化脚本（doc-index.mjs 等）
+├── archive/                 # 历史容器方案留档（archive/docker）
+├── vercel.json              # Vercel 纯前端主站构建与 SPA 路由重写配置
+└── package.json             # pnpm workspace 根配置（v0.4.0）
 ```
 
-- **单文档模型**：`content.json` 结构为 `{version, admin, loginFailures, settings, resume, projects}`
-- **读路径**（`getDoc()`）：Blob → 本地文件 → 内存种子，三级降级；任何存储异常不抛错，站点照常渲染
-- **写路径**（`updateDoc(mutator)`）：读-改-写整体落盘，返回 mutator 结果；写入带 `allowOverwrite`
-- **内存缓存 2s TTL**：页面渲染与 API 路由是独立 bundle，缓存不能永久化，否则保存后另一侧读到旧值
-- **种子数据**：`data/*.js` 仅首次初始化；之后以 Blob 上的 content.json 为准
-- **本地降级**：未配置 `BLOB_READ_WRITE_TOKEN` 时，内容降级写入 `data/content.local.json`（已 gitignore），编辑流程照常可用；上传功能需要真实 token
-
-### 目录结构
-
-```
-app/            页面 + API 路由（App Router）
-components/     Memphis 设计系统 + 编辑 UI
-lib/            存储 / 认证 / 业务逻辑
-data/           种子数据（首次初始化用）
-public/images/  静态图片
-docs/           开发文档（API 契约等）
-.trae/documents/ 历史方案文档
-platform/       V0.03 简历公开平台（v0.3 分支）
-```
-
-### 核心模块
-
-| 模块 | 职责 |
-|---|---|
-| `lib/store.js` | 单文档读写（getDoc / updateDoc），Blob → 本地 → 内存三级降级 |
-| `lib/settings.js` | `getSiteSettings / getResumeData / updateSiteSettings / updateResumeData / validateResume`（简历校验规则见 [docs/API契约.md](docs/API契约.md)） |
-| `lib/projects.js` | list（featured 降序、id 降序）/ getById / create（自增 id、自动 slug）/ update / delete / slugExists |
-| `lib/users.js` | `getAdmin / findAdminByUserId / checkPassword / getBanState / recordFailure / clearFailures`（3 次失败/5 分钟 → 5 分钟封禁，翻倍，上限 2h） |
-| `lib/auth.js` | jose HS256 JWT + `ensureSecret()`（生产必须显式设置 `AUTH_SECRET`）+ `createSession / getCurrentUser / clearSessionCookie` |
-| `lib/settingsStore.js` / `lib/projectsStore.js` | 客户端 30s 内存缓存 |
-| `components/AuthContext.jsx` / `LoginModal.jsx` | 登录态管理与登录弹窗 |
-
-### API
-
-后端提供四组路由：`/api/auth`（认证）、`/api/settings`（设置与简历）、`/api/projects`（作品集 CRUD）、`/api/upload`（媒体上传）。
-
-完整接口契约（请求/响应格式、鉴权要求、校验规则、限制）见 **[docs/API契约.md](docs/API契约.md)**。
+---
 
 ## 本地开发
 
+环境要求：**Node.js >= 22**、**pnpm >= 10**。
+
 ```bash
-npm install
-npm run dev        # http://localhost:3000
-npm run build && npm run start   # 生产模式（E2E 验证用）
+# 1. 安装依赖
+pnpm install --frozen-lockfile
+
+# 2. 启动前端开发服务（http://localhost:5173）
+pnpm dev:web
+
+# 3. 同时启动前后端（二/三期全栈联调）
+pnpm dev
+
+# 4. 校验与构建
+pnpm docs:check    # 校验文档 frontmatter 与 INDEX.md 索引
+pnpm typecheck     # 全仓 TypeScript 类型检查
+pnpm test          # Vitest 单元测试
+pnpm build:web     # 构建纯前端产物（apps/web/dist）
+pnpm build         # 全量构建 web + api
 ```
 
-- 首次访问自动用种子数据初始化内容文档
-- 管理员账号默认 `useradmin / useradmin123`（可用 `INIT_ADMIN_USERNAME` / `INIT_ADMIN_PASSWORD` 覆盖），登录 `/settings` 后请尽快修改密码
-- 未配置 Blob token 时自动降级到本地文件存储（见「架构设计 → 数据与存储」）
+---
 
 ## 部署指南
 
-### Vercel（V0.02）
+### 1. Vercel 纯前端主站（当前线上展示站）
 
-连接 GitHub 仓库自动部署。**必须配置环境变量**（Settings → Environment Variables）：
+仓库根目录已配置 [`vercel.json`](vercel.json)，推送 `main` 分支即自动构建纯前端展示站并开启 SPA 路由重写：
 
-| 变量 | 说明 |
-|---|---|
-| `AUTH_SECRET` | 会话签名密钥（**生产必配**，缺失会报错 `服务初始化失败：[auth] 生产环境必须显式设置 AUTH_SECRET...`）。生成：`openssl rand -hex 32` |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob 读写凭证（Storage → Create Database → Blob 创建后复制），**生产必配**，且 Blob Store 必须为 Public Access，否则内容无法持久化、无法上传 |
-| `INIT_ADMIN_USERNAME` / `INIT_ADMIN_PASSWORD` | 可选。首次初始化管理员账号，默认 `useradmin / useradmin123` |
+- **Install Command**：`pnpm install --frozen-lockfile --filter @platform/web...`（跳过 `apps/api` 的原生模块 `better-sqlite3`，避免无意义编译）
+- **Build Command**：`pnpm --filter @platform/web build`
+- **Output Directory**：`apps/web/dist`
 
-- 内容编辑保存在 `/settings`，无需重新部署；推送 main 自动部署
-- 视频上传注意：Vercel Hobby 函数请求体上限约 4.5MB（详见 [docs/API契约.md](docs/API契约.md)）
+> 若 Vercel 项目是从旧版 Next.js 升级而来，首次切换需在 Vercel 控制台 **Settings → Build and Deployment → Framework Preset** 中确认选择 `Vite`（或 `Other`）。
 
-### VPS 自建（V0.03 · platform/）
+### 2. 阿里云 ECS 自建全栈（二/三期平台版）
 
-V0.03 简历平台部署在阿里云 ECS（首尔），**Linux 原生部署，无 Docker（有意为之，省内存）**：
+面向后续开启在线编辑与多用户存储时使用，采用 **Linux 原生部署（无 Docker，2C1G 低内存友好）**：
 
-| 项 | 值 |
-|---|---|
-| 登录命令 | `ssh shouer`（`~/.ssh/config` 已配置；密钥 `~/.ssh/首尔.pem`） |
-| 主机 | `47.80.27.242`（阿里云 ECS · 首尔 ap-northeast-2），`root@22` |
-| 规格 | `ecs.e-c2m1.large`（2C1G，可用 ~700MB，暂不可升级）+ 4G swap 兜底 |
-| 系统 | Debian 12；已装 nginx / Node 22 / pnpm / sqlite3 |
-| 部署目标 | `/opt/resume-platform`（systemd unit `resume-api` + nginx 站点 `resume.conf` 已就位，`User=resume`） |
-| 技术栈 | pnpm monorepo（`apps/web` Vite+React SPA + `apps/api` Hono）+ SQLite(Drizzle) + 阿里云 OSS + 客户端 PDF |
+- 架构决策详见 [`docs/03-tech/TECH-001-部署架构调整-低内存原生部署.md`](docs/03-tech/TECH-001-部署架构调整-低内存原生部署.md)
+- 部署与回滚手册详见 [`docs/04-ops/OPS-001-部署与更新手册.md`](docs/04-ops/OPS-001-部署与更新手册.md)
+- 运维脚本位于 [`deploy/`](deploy/)（`deploy.sh` / `backup.sh` / `nginx-resume.conf` / `resume-api.service`）
 
-**更新机制**：本地构建 → tar/scp 直传 → 服务器 `npm install --omit=dev`（better-sqlite3 原生模块须在 Linux 上安装）→ 重启。详细流程见 `platform/docs/04-ops/OPS-001.md`，架构决策见 `platform/docs/03-tech/TECH-001.md`。
+---
 
-## 使用说明
+## 三期演进路线图
 
-1. 访问 `/settings`，使用管理员账号登录（默认 `useradmin / useradmin123`）
-2. 在线编辑：
-   - **个人资料**：首页 Hero、联系方式、footer 等
-   - **双版简历**：AIGC 漫剧制片版 / 全栈开发工程师版，各有必填校验（见 API 契约）
-   - **作品集**：增删改项目（AIGC 漫剧 / 开发分类，支持 featured 置顶首页）
-   - **安全**：修改登录密码；上传图片/视频
-3. **保存即生效**：公开页面为服务端动态渲染（`force-dynamic`）+ 客户端 fetch（30s 内存缓存），保存后刷新页面即可看到最新内容，无需重新部署
+1. **第一期（已完成 · `v0.4.0`）**：高完成度双风格个人展示站、二级菜单作品集与可打印双岗位正式简历；后续可平滑接入阿里云 OSS + CDN 视频播放。
+2. **第二期（已留基座）**：恢复并打磨在线简历编辑工作台（`/app/*`、`/login`、`/admin`）。
+3. **第三期（远景规划）**：将个人展示站与公开多用户简历平台（`/r/:slug`）深度融合。
 
-## 贡献指南
+---
 
-- **分支模型**：`main` 为 V0.02 冻结版（仅接受文档性改动与必要修复）；V0.03 功能开发一律在 `v0.3` 分支的 `platform/` 目录进行，就绪后通过 PR 合入
-- **提交前验证**：`npm run build` 通过（构建后所有路由应显示 `ƒ (Dynamic)`），并完成功能回归（清单见 `AGENTS.md`「任务执行标准」）
-- **接口变更**：修改任何 API 时必须同步更新 [docs/API契约.md](docs/API契约.md)
-- **开发注意事项**（Next 16 / Tailwind v4 / framer-motion 等易踩坑点）见 `AGENTS.md`「错误处理与常见坑」
+## 历史归档说明（V0.02）
+
+- **归档位置**：Git 分支 `archive/v0.2` 与标签 `V0.02`
+- **如需查看或恢复旧版**：
+  ```bash
+  git checkout archive/v0.2
+  ```
+
+---
 
 ## 安全与隐私说明
 
-- 管理员的 bcrypt 密码哈希存于公开的 content.json 中（已知权衡）：请务必在首次登录后修改默认密码，并使用强密码
-- 联系方式仅公开邮箱与 GitHub，手机号/微信号在投递时单独提供以保护隐私
-- 作品素材版权归原公司所有，网站仅展示项目名称与文字描述
+- 所有公开展示的商业工程项目均严格脱敏，不暴露客户内部域名、AppID、测试口令或私有仓库地址。
+- 公开联系方式仅展示邮箱与 GitHub（[`github.com/DammnMing`](https://github.com/DammnMing)），个人手机号与微信在正式投递沟通时单独提供。
+- 环境变量模板见 [`.env.example`](.env.example)，生产密钥严禁提交至代码库。
