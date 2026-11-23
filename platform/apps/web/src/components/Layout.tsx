@@ -1,111 +1,138 @@
 import { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { usePersona } from "./PersonaContext.js";
-import { SHOWCASE_PROFILE } from "../data/showcase.js";
-import {
-  DecorDots,
-  DecorOutlineCircle,
-  DecorSolidCircle,
-  DecorSolidSquare,
-  DecorTriangle,
-  IconClose,
-  IconGithub,
-  IconMail,
-  IconMenu,
-} from "./MemphisDecor.js";
+import { SHOWCASE_PROFILE, SHOWCASE_PROJECTS } from "../data/showcase.js";
+import { IconClose, IconGithub, IconMail, IconMenu } from "./MemphisDecor.js";
 
-const NAV_LINKS = [
-  { to: "/", label: "首页", dotClass: "bg-mem-red" },
-  { to: "/resume", label: "简历", dotClass: "bg-mem-blue" },
-  { to: "/portfolio", label: "作品集", dotClass: "bg-mem-green" },
+const PORTFOLIO_SUBMENU = [
+  { to: "/portfolio", label: "全部作品", count: SHOWCASE_PROJECTS.length },
+  {
+    to: "/portfolio?cat=manga",
+    label: "漫剧作品",
+    count: SHOWCASE_PROJECTS.filter((p) => p.category === "manga").length,
+  },
+  {
+    to: "/portfolio?cat=dev",
+    label: "全栈工程",
+    count: SHOWCASE_PROJECTS.filter((p) => p.category === "dev").length,
+  },
 ];
 
 export function Layout() {
   const { persona, setPersona } = usePersona();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [portfolioMenuOpen, setPortfolioMenuOpen] = useState(false);
 
   const isHome = pathname === "/";
   const isShowcase = pathname === "/resume" || pathname === "/portfolio";
   const isPublicShowcase = isHome || isShowcase;
   const isDevTheme = isPublicShowcase && persona === "dev";
 
+  const linkTextCls = (active: boolean) =>
+    isDevTheme
+      ? active
+        ? "text-white"
+        : "text-zinc-400 hover:text-white"
+      : active
+        ? "text-ink"
+        : "text-ink-muted hover:text-ink";
+
   return (
     <div
-      className={`min-h-screen flex flex-col transition-colors ${
-        isDevTheme ? "bg-[#0B1120] text-slate-100" : isPublicShowcase ? "bg-cream text-mem-black" : ""
+      className={`min-h-screen flex flex-col transition-colors duration-300 ${
+        isDevTheme ? "bg-obsidian text-zinc-100" : isPublicShowcase ? "bg-paper text-ink" : ""
       }`}
     >
-      {/* 顶部导航栏：收敛二三期入口，突出「一人双能」双风格切换 */}
+      {/* 极简吸顶导航 */}
       <header
-        className={`sticky top-0 z-50 no-print transition-colors ${
+        className={`sticky top-0 z-50 backdrop-blur-md no-print transition-colors duration-300 ${
           isDevTheme
-            ? "bg-slate-950/90 backdrop-blur border-b border-slate-800 text-slate-100"
-            : "bg-cream border-b-[3px] border-mem-black text-mem-black"
+            ? "bg-obsidian/90 border-b border-blue-400/15 text-zinc-100"
+            : "bg-paper/90 border-b border-hairline text-ink"
         }`}
       >
-        <nav className="mx-auto flex max-w-7xl h-20 items-center justify-between gap-4 px-4 sm:px-6">
-          {/* Logo */}
+        <nav className="mx-auto flex max-w-7xl h-16 sm:h-20 items-center justify-between gap-4 px-4 sm:px-8">
+          {/* 左侧字标 */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0" onClick={() => setMobileOpen(false)}>
-            {isDevTheme ? (
-              <span className="w-8 h-8 rounded bg-sky-500/20 border border-sky-400/60 flex items-center justify-center font-mono-tech text-xs text-sky-300 font-bold">
-                &lt;/&gt;
-              </span>
-            ) : (
-              <span className="relative flex items-center gap-1">
-                <DecorSolidSquare className="w-6 h-6" color="mem-red" />
-                <DecorSolidCircle className="w-4 h-4 -ml-2 mt-4" color="mem-yellow" />
-                <DecorOutlineCircle className="w-7 h-7 -ml-1 -mb-2" color="mem-black" />
-              </span>
-            )}
-            <span className={`text-xl sm:text-2xl tracking-tighter ${isDevTheme ? "font-bold text-white" : "font-display text-mem-black"}`}>
+            <span
+              className={`w-2 h-2 rounded-full ${isDevTheme ? "bg-electric" : "bg-vermilion"}`}
+              aria-hidden
+            />
+            <span className={`text-lg sm:text-xl tracking-tight ${isDevTheme ? "font-medium text-white" : "font-editorial font-semibold text-ink"}`}>
               {SHOWCASE_PROFILE.name}
-              <span className={`ml-1.5 ${isDevTheme ? "font-mono-tech text-sky-400 text-base sm:text-lg" : "marker-yellow"}`}>
-                {SHOWCASE_PROFILE.siteName}
-              </span>
+            </span>
+            <span className={`font-mono-tech text-xs hidden sm:inline ${isDevTheme ? "text-zinc-500" : "text-ink-muted"}`}>
+              / {SHOWCASE_PROFILE.siteName}
             </span>
           </Link>
 
-          {/* 桌面端主导航 */}
-          <div className="hidden lg:flex items-center gap-2">
-            {NAV_LINKS.map((link) => {
-              const active = link.to === "/" ? pathname === "/" : pathname.startsWith(link.to);
-              return (
-                <Link key={link.to} to={link.to} className="relative px-4 py-2 group">
-                  <span
-                    className={`relative z-10 text-base transition-colors ${
+          {/* 桌面端主导航（含作品集下拉二级菜单） */}
+          <div className="hidden md:flex items-center gap-5 lg:gap-8 text-sm">
+            <Link to="/" className={`py-2 transition-colors ${linkTextCls(pathname === "/")}`}>
+              首页
+            </Link>
+
+            {/* 作品集 + 极简下拉二级菜单 */}
+            <div
+              className="relative"
+              onMouseEnter={() => setPortfolioMenuOpen(true)}
+              onMouseLeave={() => setPortfolioMenuOpen(false)}
+            >
+              <Link
+                to="/portfolio"
+                className={`inline-flex items-center gap-1.5 py-2 transition-colors ${linkTextCls(pathname.startsWith("/portfolio"))}`}
+              >
+                作品集
+                <span className="text-[10px] opacity-60">▾</span>
+              </Link>
+
+              {portfolioMenuOpen && (
+                <div className="absolute left-0 top-full pt-1 w-48 z-50">
+                  <div
+                    className={`py-1.5 border shadow-xl ${
                       isDevTheme
-                        ? `font-medium ${active ? "text-sky-300" : "text-slate-300 group-hover:text-white"}`
-                        : `font-display tracking-tight ${active ? "text-mem-black" : "text-mem-black/80 group-hover:text-mem-black"}`
+                        ? "bg-obsidian-card border-white/15 text-zinc-200"
+                        : "bg-paper border-hairline text-ink"
                     }`}
                   >
-                    {link.label}
-                  </span>
-                  {isDevTheme ? (
-                    <span
-                      className={`absolute left-4 right-4 bottom-1 h-0.5 bg-sky-400 transition-opacity ${
-                        active ? "opacity-100" : "opacity-0 group-hover:opacity-60"
-                      }`}
-                    />
-                  ) : (
-                    <span
-                      className={`absolute left-3 right-3 bottom-1 h-2 -z-0 transition-opacity ${link.dotClass} ${
-                        active ? "opacity-100" : "opacity-0 group-hover:opacity-80"
-                      }`}
-                    />
-                  )}
-                </Link>
-              );
-            })}
+                    {PORTFOLIO_SUBMENU.map((sub) => {
+                      const subActive = pathname + search === sub.to || (sub.to === "/portfolio" && pathname === "/portfolio" && !search);
+                      return (
+                        <Link
+                          key={sub.to}
+                          to={sub.to}
+                          onClick={() => setPortfolioMenuOpen(false)}
+                          className={`flex items-center justify-between px-4 py-2 text-xs transition-colors ${
+                            isDevTheme
+                              ? subActive
+                                ? "text-white bg-white/5"
+                                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                              : subActive
+                                ? "text-ink bg-paper-alt font-medium"
+                                : "text-ink-muted hover:text-ink hover:bg-paper-alt/60"
+                          }`}
+                        >
+                          <span>{sub.label}</span>
+                          <span className="font-mono-tech text-[11px] opacity-60">{sub.count}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link to="/resume" className={`py-2 transition-colors ${linkTextCls(pathname.startsWith("/resume"))}`}>
+              简历
+            </Link>
           </div>
 
-          {/* 桌面端右侧：「一人双能」切换胶囊 + GitHub */}
-          <div className="hidden lg:flex items-center gap-3">
+          {/* 桌面端右侧：极简双模式切换胶囊 + GitHub */}
+          <div className="hidden md:flex items-center gap-3 lg:gap-4">
             <div
-              className={`inline-flex p-1 ${
-                isDevTheme
-                  ? "bg-slate-900 border border-slate-700 rounded-lg"
-                  : "bg-white border-memphis shadow-memphis-sm"
+              className={`inline-flex p-0.5 border text-xs ${
+                isDevTheme ? "border-white/15 bg-black/40" : "border-hairline bg-paper-alt/70"
               }`}
               role="group"
               aria-label="切换身份视角"
@@ -113,30 +140,30 @@ export function Layout() {
               <button
                 type="button"
                 onClick={() => setPersona("aigc")}
-                className={`px-3 py-1.5 text-xs transition-all cursor-pointer ${
+                className={`px-3 py-1.5 transition-colors cursor-pointer ${
                   persona === "aigc"
-                    ? "bg-mem-red text-white font-display"
+                    ? "bg-ink text-paper font-medium"
                     : isDevTheme
-                      ? "text-slate-300 hover:text-white rounded"
-                      : "text-mem-black/75 hover:text-mem-black font-display"
+                      ? "text-zinc-400 hover:text-white"
+                      : "text-ink-muted hover:text-ink"
                 }`}
               >
-                ✦ 漫剧制片
+                漫剧制片
               </button>
               <button
                 type="button"
                 onClick={() => setPersona("dev")}
-                className={`px-3 py-1.5 text-xs transition-all cursor-pointer ${
+                className={`px-3 py-1.5 font-mono-tech transition-colors cursor-pointer ${
                   persona === "dev"
                     ? isDevTheme
-                      ? "bg-sky-500 text-slate-950 font-mono-tech font-bold rounded"
-                      : "bg-mem-blue text-white font-display"
+                      ? "bg-white text-black font-medium"
+                      : "bg-ink text-paper"
                     : isDevTheme
-                      ? "text-slate-300 hover:text-white rounded font-mono-tech"
-                      : "text-mem-black/75 hover:text-mem-black font-display"
+                      ? "text-zinc-400 hover:text-white"
+                      : "text-ink-muted hover:text-ink"
                 }`}
               >
-                &lt;/&gt; 全栈开发
+                全栈开发
               </button>
             </div>
 
@@ -144,13 +171,13 @@ export function Layout() {
               href={SHOWCASE_PROFILE.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-flex items-center gap-1.5 px-3.5 py-2 text-sm transition-all ${
+              className={`inline-flex items-center gap-1.5 text-xs font-mono-tech px-3 py-1.5 border transition-colors ${
                 isDevTheme
-                  ? "bg-slate-900 text-slate-100 border border-slate-700 rounded-lg hover:border-sky-400 font-mono-tech"
-                  : "bg-mem-black text-white font-display tracking-tight border-memphis shadow-memphis-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+                  ? "border-white/15 text-zinc-300 hover:border-white/40 hover:text-white"
+                  : "border-hairline text-ink-muted hover:border-ink hover:text-ink"
               }`}
             >
-              <IconGithub className="w-4 h-4" /> GitHub
+              <IconGithub className="w-3.5 h-3.5" /> GitHub ↗
             </a>
           </div>
 
@@ -158,10 +185,8 @@ export function Layout() {
           <button
             type="button"
             onClick={() => setMobileOpen((v) => !v)}
-            className={`lg:hidden p-2 cursor-pointer ${
-              isDevTheme
-                ? "bg-slate-900 border border-slate-700 rounded text-slate-100"
-                : "bg-white border-memphis shadow-memphis-sm"
+            className={`md:hidden p-2 border cursor-pointer ${
+              isDevTheme ? "border-white/15 text-zinc-200" : "border-hairline text-ink"
             }`}
             aria-label="切换导航菜单"
           >
@@ -169,53 +194,72 @@ export function Layout() {
           </button>
         </nav>
 
-        {/* 移动端折叠菜单 */}
+        {/* 移动端折叠菜单（直接展开作品集二级子项） */}
         {mobileOpen && (
           <div
-            className={`lg:hidden px-4 py-4 space-y-3 ${
-              isDevTheme ? "border-t border-slate-800 bg-slate-950" : "border-t-2 border-mem-black bg-cream"
+            className={`md:hidden px-4 py-5 space-y-4 border-t ${
+              isDevTheme ? "border-white/10 bg-obsidian" : "border-hairline bg-paper"
             }`}
           >
-            <div className="flex flex-col gap-2">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  onClick={() => setMobileOpen(false)}
-                  className={`px-3 py-2 text-sm ${
-                    isDevTheme
-                      ? "bg-slate-900 border border-slate-700 rounded text-slate-100"
-                      : "bg-white border-memphis font-display"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <div className="flex flex-col space-y-2 text-sm">
+              <Link to="/" onClick={() => setMobileOpen(false)} className="py-1.5">
+                首页
+              </Link>
+              <div className="pt-1 space-y-1.5">
+                <p className={`text-xs font-mono-tech ${isDevTheme ? "text-zinc-500" : "text-ink-muted"}`}>
+                  作品集 / PORTFOLIO
+                </p>
+                <div className="pl-3 flex flex-col space-y-1.5 border-l border-current/20">
+                  {PORTFOLIO_SUBMENU.map((sub) => (
+                    <Link
+                      key={sub.to}
+                      to={sub.to}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between py-1 text-sm opacity-90"
+                    >
+                      <span>{sub.label}</span>
+                      <span className="font-mono-tech text-xs opacity-60">{sub.count}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <Link to="/resume" onClick={() => setMobileOpen(false)} className="py-1.5">
+                简历
+              </Link>
             </div>
-            <div className="flex flex-wrap items-center gap-2 pt-2">
+
+            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-current/10">
               <button
                 type="button"
                 onClick={() => setPersona("aigc")}
                 className={`px-3 py-1.5 text-xs border cursor-pointer ${
-                  persona === "aigc" ? "bg-mem-red text-white border-mem-black font-display" : "bg-white text-mem-black border-mem-black"
+                  persona === "aigc"
+                    ? "bg-ink text-paper border-ink"
+                    : isDevTheme
+                      ? "border-white/15 text-zinc-400"
+                      : "border-hairline text-ink-muted"
                 }`}
               >
-                ✦ 漫剧制片
+                漫剧制片
               </button>
               <button
                 type="button"
                 onClick={() => setPersona("dev")}
-                className={`px-3 py-1.5 text-xs border cursor-pointer ${
-                  persona === "dev" ? "bg-sky-500 text-slate-950 border-sky-400 font-bold" : "bg-slate-900 text-slate-200 border-slate-700"
+                className={`px-3 py-1.5 text-xs border font-mono-tech cursor-pointer ${
+                  persona === "dev"
+                    ? "bg-white text-black border-white"
+                    : isDevTheme
+                      ? "border-white/15 text-zinc-400"
+                      : "border-hairline text-ink-muted"
                 }`}
               >
-                &lt;/&gt; 全栈开发
+                全栈开发
               </button>
               <a
                 href={SHOWCASE_PROFILE.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-mem-black text-white text-xs border border-slate-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono-tech border border-current/20"
               >
                 <IconGithub className="w-3.5 h-3.5" /> GitHub
               </a>
@@ -230,103 +274,88 @@ export function Layout() {
           isHome
             ? "flex-1"
             : isShowcase
-              ? "flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 py-10 sm:py-14"
+              ? "flex-1 mx-auto w-full max-w-6xl px-4 sm:px-8 py-12 sm:py-16"
               : "flex-1 mx-auto w-full max-w-5xl px-4 py-8"
         }
       >
         <Outlet />
       </main>
 
-      {/* Footer：随身份风格切换 */}
-      {isDevTheme ? (
-        <footer className="bg-slate-950 border-t border-slate-800 text-slate-300 no-print">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div className="sm:col-span-2">
-              <p className="font-mono-tech text-sm text-sky-400 mb-2">$ cat ./about.txt</p>
-              <p className="text-xl font-bold text-white mb-2">
-                {SHOWCASE_PROFILE.name} · {SHOWCASE_PROFILE.siteName}
-              </p>
-              <p className="text-sm text-slate-400 max-w-lg leading-relaxed mb-4">{SHOWCASE_PROFILE.bioShort}</p>
-              <p className="font-mono-tech text-xs text-slate-500">
-                © {new Date().getFullYear()} {SHOWCASE_PROFILE.name} · Full-Stack &amp; AIGC Producer
-              </p>
-            </div>
-            <div className="space-y-3">
-              <p className="font-mono-tech text-sm text-cyan-300">联系我</p>
+      {/* 极简三列 Footer */}
+      <footer
+        className={`no-print border-t transition-colors duration-300 ${
+          isDevTheme
+            ? "bg-obsidian border-white/10 text-zinc-400"
+            : "bg-paper-alt/60 border-hairline text-ink-muted"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12 sm:py-16 grid grid-cols-1 sm:grid-cols-12 gap-10">
+          <div className="sm:col-span-6 space-y-3">
+            <p className={`text-lg ${isDevTheme ? "font-medium text-white" : "font-editorial font-semibold text-ink"}`}>
+              {SHOWCASE_PROFILE.name} · {SHOWCASE_PROFILE.siteName}
+            </p>
+            <p className="text-sm max-w-md leading-relaxed">{SHOWCASE_PROFILE.bioShort}</p>
+            <p className="font-mono-tech text-xs opacity-70 pt-2">
+              © {new Date().getFullYear()} {SHOWCASE_PROFILE.name} · {SHOWCASE_PROFILE.location}
+            </p>
+          </div>
+
+          <div className="sm:col-span-3 space-y-2.5 text-sm">
+            <p className={`font-mono-tech text-xs uppercase tracking-widest ${isDevTheme ? "text-zinc-500" : "text-ink-muted"}`}>
+              Index
+            </p>
+            <ul className="space-y-1.5">
+              <li>
+                <Link to="/" className="hover:underline">
+                  首页
+                </Link>
+              </li>
+              <li>
+                <Link to="/portfolio" className="hover:underline">
+                  全部作品集
+                </Link>
+              </li>
+              <li>
+                <Link to="/portfolio?cat=manga" className="hover:underline">
+                  漫剧作品
+                </Link>
+              </li>
+              <li>
+                <Link to="/portfolio?cat=dev" className="hover:underline">
+                  全栈工程
+                </Link>
+              </li>
+              <li>
+                <Link to="/resume" className="hover:underline">
+                  正式简历
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="sm:col-span-3 space-y-2.5 text-sm">
+            <p className={`font-mono-tech text-xs uppercase tracking-widest ${isDevTheme ? "text-zinc-500" : "text-ink-muted"}`}>
+              Contact
+            </p>
+            <div className="flex flex-col gap-2">
               <a
                 href={`mailto:${SHOWCASE_PROFILE.email}`}
-                className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg hover:border-sky-400 text-sm text-slate-200 w-fit transition-colors"
+                className="inline-flex items-center gap-2 hover:underline w-fit"
               >
-                <IconMail className="w-4 h-4 text-sky-400" /> {SHOWCASE_PROFILE.email}
+                <IconMail className="w-4 h-4" /> {SHOWCASE_PROFILE.email}
               </a>
               <a
                 href={SHOWCASE_PROFILE.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg hover:border-sky-400 text-sm text-slate-200 w-fit transition-colors"
+                className="inline-flex items-center gap-2 hover:underline w-fit"
               >
-                <IconGithub className="w-4 h-4 text-sky-400" /> GitHub
+                <IconGithub className="w-4 h-4" /> GitHub
               </a>
             </div>
           </div>
-        </footer>
-      ) : (
-        <footer className="relative bg-cream-pink border-t-[3px] border-mem-black overflow-hidden no-print">
-          <DecorDots className="absolute top-4 left-6 w-24 h-16 opacity-40" color="mem-blue" size={3} gap={12} />
-          <DecorSolidCircle className="absolute bottom-5 right-12 w-8 h-8" color="mem-red" />
-          <DecorTriangle className="absolute top-8 right-40 hidden sm:block" color="mem-green" rotate={12} />
-          <DecorSolidSquare className="absolute bottom-14 left-40 w-5 h-5 hidden sm:block" color="mem-yellow" />
-
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div className="sm:col-span-2">
-              <div className="flex items-center gap-2 mb-3">
-                <DecorSolidSquare className="w-5 h-5" color="mem-red" />
-                <p className="font-display text-2xl tracking-tighter text-mem-black">
-                  {SHOWCASE_PROFILE.name} · {SHOWCASE_PROFILE.siteName}
-                </p>
-              </div>
-              <p className="font-body text-sm text-mem-black/75 max-w-md leading-relaxed mb-5">
-                {SHOWCASE_PROFILE.bioShort}
-              </p>
-              <p className="font-body text-xs text-mem-black/60">
-                © {new Date().getFullYear()} {SHOWCASE_PROFILE.name} · {SHOWCASE_PROFILE.titles.join(" / ")}
-                <span className="ml-2 marker-yellow">Made with Memphis</span>
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <p className="font-display text-lg tracking-tighter text-mem-black flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-mem-blue border-memphis" />
-                联系我
-              </p>
-              <a
-                href={`mailto:${SHOWCASE_PROFILE.email}`}
-                className="flex items-center gap-2 px-3 py-2.5 bg-white border-memphis shadow-memphis-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-mem-yellow transition-all font-body text-sm w-fit"
-              >
-                <IconMail className="w-4 h-4 shrink-0 text-mem-red" /> {SHOWCASE_PROFILE.email}
-              </a>
-              <a
-                href={SHOWCASE_PROFILE.githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2.5 bg-mem-black text-white border-memphis shadow-memphis-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all font-body text-sm w-fit"
-              >
-                <IconGithub className="w-4 h-4 shrink-0" /> GitHub
-              </a>
-            </div>
-          </div>
-
-          {/* 底部六色彩虹条 */}
-          <div className="flex h-3">
-            <div className="flex-1 bg-mem-red" />
-            <div className="flex-1 bg-mem-orange" />
-            <div className="flex-1 bg-mem-yellow" />
-            <div className="flex-1 bg-mem-green" />
-            <div className="flex-1 bg-mem-blue" />
-            <div className="flex-1 bg-mem-purple" />
-          </div>
-        </footer>
-      )}
+        </div>
+      </footer>
     </div>
   );
 }
