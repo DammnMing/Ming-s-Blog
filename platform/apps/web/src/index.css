@@ -1,0 +1,208 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&family=Bungee+Shade&display=swap");
+@import "tailwindcss";
+
+@theme {
+  /* Memphis 孟菲斯色彩体系 */
+  --color-cream: #FFF9E6;
+  --color-cream-pink: #FFF0F5;
+  --color-mem-red: #FF3B30;
+  --color-mem-blue: #007AFF;
+  --color-mem-green: #34C759;
+  --color-mem-orange: #FF9500;
+  --color-mem-black: #1A1A1A;
+  --color-mem-purple: #AF52DE;
+  --color-mem-yellow: #FFD60A;
+
+  /* Typography */
+  --font-display: "Archivo Black", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-body: "Space Grotesk", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-fancy: "Bungee Shade", "Archivo Black", system-ui, sans-serif;
+}
+
+/* 主题令牌由 ThemeProvider 注入 :root（@platform/ui） */
+:root {
+  --color-primary: #e63946;
+  --color-bg: #fdf6ec;
+  --color-surface: #ffffff;
+  --color-text: #1a1a1a;
+  --color-muted: #6b6b6b;
+  --color-accent: #007aff;
+  --color-border: #1a1a1a;
+  --font-family: "Trebuchet MS", "PingFang SC", sans-serif;
+  --radius: 0px;
+  --shadow: 6px 6px 0 rgba(26, 26, 26, 0.9);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ================= Memphis 工具类 ================= */
+.shadow-memphis {
+  box-shadow: 4px 4px 0 var(--color-mem-black);
+}
+.shadow-memphis-sm {
+  box-shadow: 2px 2px 0 var(--color-mem-black);
+}
+.shadow-memphis-lg {
+  box-shadow: 8px 8px 0 var(--color-mem-black);
+}
+
+.border-memphis {
+  border: 2px solid var(--color-mem-black);
+}
+.border-memphis-thick {
+  border: 3px solid var(--color-mem-black);
+}
+
+.marker-yellow {
+  background-image: linear-gradient(transparent 60%, var(--color-mem-yellow) 60%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0 2px;
+}
+.marker-pink {
+  background-image: linear-gradient(transparent 60%, #FFB6C1 60%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0 2px;
+}
+.marker-green {
+  background-image: linear-gradient(transparent 60%, #A7F3D0 60%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  padding: 0 2px;
+}
+
+.bg-polka {
+  background-image: radial-gradient(circle, var(--color-mem-black) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+}
+.bg-polka-red {
+  background-image: radial-gradient(circle, var(--color-mem-red) 2px, transparent 2px);
+  background-size: 20px 20px;
+}
+.bg-polka-blue {
+  background-image: radial-gradient(circle, var(--color-mem-blue) 2px, transparent 2px);
+  background-size: 20px 20px;
+}
+
+.bg-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-mem-black) 0px,
+    var(--color-mem-black) 2px,
+    transparent 2px,
+    transparent 10px
+  );
+}
+.bg-stripes-orange {
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--color-mem-orange) 0px,
+    var(--color-mem-orange) 4px,
+    transparent 4px,
+    transparent 14px
+  );
+}
+
+.bg-mem-grid {
+  background-image:
+    linear-gradient(rgba(26, 26, 26, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 26, 26, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+.font-body {
+  font-family: var(--font-body);
+}
+.font-fancy {
+  font-family: var(--font-fancy);
+  line-height: 1;
+}
+
+@keyframes mem-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-mem-in {
+  animation: mem-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ================= 深色极客工程风辅助类 ================= */
+.bg-dev-grid {
+  background-image:
+    linear-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.dev-glow {
+  background: radial-gradient(ellipse 70% 45% at 50% 0%, rgba(56, 189, 248, 0.16), transparent 70%);
+}
+
+.font-mono-tech {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* ===== 打印一致性（一致性内核）：@media print 只保留简历主体，强制纯白纸质排版 ===== */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-area {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .print-area > div {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+  .print-resume-sheet,
+  .print-resume-sheet * {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border-color: #d1d5db !important;
+    box-shadow: none !important;
+  }
+  .print-resume-sheet .print-accent-badge {
+    background: #f3f4f6 !important;
+    color: #111111 !important;
+    border: 1px solid #9ca3af !important;
+  }
+  .resume-view {
+    color: #111 !important;
+  }
+  .resume-section {
+    break-inside: avoid;
+  }
+}

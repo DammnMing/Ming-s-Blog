@@ -1,0 +1,275 @@
+/** 极简 API 客户端（fetch 带 cookie，同源代理） */
+import type { ResumeData } from "@platform/shared";
+
+export interface PublicUser {
+  id: number;
+  username: string;
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  themeId: number | null;
+  role: string;
+}
+
+export interface ApiResult<T = unknown> {
+  ok: boolean;
+  data?: T;
+  error?: string;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, { credentials: "include", ...init });
+  const body = (await res.json().catch(() => ({}))) as T & { error?: string };
+  if (!res.ok) {
+    throw new Error(body.error ?? `请求失败 (${res.status})`);
+  }
+  return body;
+}
+
+export function apiGet<T = unknown>(path: string): Promise<T> {
+  return request<T>(path);
+}
+
+export function apiPost<T = unknown>(path: string, data?: unknown): Promise<T> {
+  return request<T>(path, {
+    method: "POST",
+    headers: data !== undefined ? { "content-type": "application/json" } : undefined,
+    body: data !== undefined ? JSON.stringify(data) : undefined,
+  });
+}
+
+export function apiPut<T = unknown>(path: string, data?: unknown): Promise<T> {
+  return request<T>(path, {
+    method: "PUT",
+    headers: data !== undefined ? { "content-type": "application/json" } : undefined,
+    body: data !== undefined ? JSON.stringify(data) : undefined,
+  });
+}
+
+export function apiDelete<T = unknown>(path: string): Promise<T> {
+  return request<T>(path, { method: "DELETE" });
+}
+
+export interface HealthResponse {
+  ok: boolean;
+  service: string;
+  version: string;
+  time: string;
+  db: string;
+}
+
+export function fetchHealth() {
+  return apiGet<HealthResponse>("/api/health");
+}
+
+// ---- auth ----
+export interface AuthResponse {
+  ok: boolean;
+  user: PublicUser;
+}
+
+export function apiRegister(input: { username: string; email: string; password: string }) {
+  return apiPost<AuthResponse>("/api/auth/register", input);
+}
+
+export function apiLogin(input: { username: string; password: string }) {
+  return apiPost<AuthResponse>("/api/auth/login", input);
+}
+
+export function apiLogout() {
+  return apiPost<{ ok: boolean }>("/api/auth/logout");
+}
+
+export async function apiMe(): Promise<PublicUser | null> {
+  const res = await fetch("/api/auth/me", { credentials: "include" });
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error("获取会话失败");
+  const body = (await res.json()) as { ok: boolean; user: PublicUser };
+  return body.user;
+}
+
+// ---- users ----
+export function apiUpdateMe(patch: { themeId?: number | null; displayName?: string }) {
+  return apiPut<{ ok: boolean; user: PublicUser }>("/api/users/me", patch);
+}
+
+// ---- themes ----
+export interface ThemeItem {
+  id: number;
+  name: string;
+  tokens: Record<string, string>;
+  isSystem: boolean;
+}
+
+export function apiGetThemes() {
+  return apiGet<{ ok: boolean; themes: ThemeItem[] }>("/api/themes");
+}
+
+// ---- resumes ----
+export interface ResumeItem {
+  id: number;
+  userId: number;
+  title: string;
+  slug: string;
+  data: ResumeData;
+  isPublic: boolean;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function apiListResumes() {
+  return apiGet<{ ok: boolean; resumes: ResumeItem[] }>("/api/resumes");
+}
+
+export function apiCreateResume(title: string) {
+  return apiPost<{ ok: boolean; resume: ResumeItem }>("/api/resumes", { title });
+}
+
+export function apiGetResume(id: number) {
+  return apiGet<{ ok: boolean; resume: ResumeItem }>(`/api/resumes/${id}`);
+}
+
+export function apiUpdateResume(id: number, patch: { title?: string; slug?: string; data?: unknown }) {
+  return apiPut<{ ok: boolean; resume: ResumeItem }>(`/api/resumes/${id}`, patch);
+}
+
+export function apiPublishResume(id: number, isPublic: boolean) {
+  return apiPost<{ ok: boolean; resume: ResumeItem }>(`/api/resumes/${id}/publish`, { isPublic });
+}
+
+export function apiDeleteResume(id: number) {
+  return apiDelete<{ ok: boolean }>(`/api/resumes/${id}`);
+}
+
+// ---- public ----
+export interface PublicResumePayload {
+  ok: boolean;
+  resume: {
+    slug: string;
+    title: string;
+    data: ResumeData;
+    updatedAt: string;
+    owner: {
+      displayName: string;
+      themeId: number | null;
+      theme: { id: number; name: string; tokens: Record<string, string> } | null;
+    };
+  };
+}
+
+export function apiGetPublicResume(slug: string) {
+  return apiGet<PublicResumePayload>(`/api/public/resumes/${slug}`);
+}
+
+// ---- media ----
+export interface MediaResult {
+  ok: boolean;
+  media: { key: string; url: string; mime: string; size: number };
+}
+
+export async function apiUploadMedia(file: File): Promise<MediaResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/api/media", { method: "POST", credentials: "include", body: form });
+  const body = (await res.json().catch(() => ({}))) as MediaResult & { error?: string };
+  if (!res.ok) throw new Error(body.error ?? `上传失败 (${res.status})`);
+  return body;
+}
+
+// ---- export（TECH-001：PDF 走客户端打印 window.print()；Word 服务端生成）----
+export function apiExportWord(slug: string) {
+  return apiGet<ArrayBuffer>(`/api/export/word/${slug}`).then(
+    (buf) => new Blob([buf as ArrayBuffer], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })
+  );
+}
+
+export function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ---- AI（P5）----
+export type PolishKind = "summary" | "experience" | "project" | "skill";
+
+export function apiPolish(input: { kind: PolishKind; text: string; jd?: string }) {
+  return apiPost<{ ok: boolean; polished: string }>("/api/ai/polish", input);
+}
+
+export interface AiImportResult {
+  ok: boolean;
+  data: ResumeData;
+  source: "ocr" | "text";
+}
+
+export async function apiImportResume(file: File): Promise<AiImportResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch("/api/ai/import", { method: "POST", credentials: "include", body: form });
+  const body = (await res.json().catch(() => ({}))) as AiImportResult & { error?: string };
+  if (!res.ok) throw new Error(body.error ?? `导入失败 (${res.status})`);
+  return body;
+}
+
+// ---- admin（P5）----
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  displayName: string | null;
+  role: string;
+  themeId: number | null;
+  createdAt: string;
+  resumeCount: number;
+}
+
+export function apiAdminUsers() {
+  return apiGet<{ ok: boolean; users: AdminUser[] }>("/api/admin/users");
+}
+
+// ---- 配置中心（P5.5）----
+export interface ConfigEntry {
+  key: string;
+  value: string;
+  sensitive: boolean;
+  source: "db" | "env" | "default";
+  configured: boolean;
+}
+
+export function apiGetAdminConfig() {
+  return apiGet<{ ok: boolean; masterKeyOk: boolean; config: ConfigEntry[] }>("/api/admin/config");
+}
+
+export function apiUpdateAdminConfig(config: Array<{ key: string; value: string }>) {
+  return apiPut<{ ok: boolean }>("/api/admin/config", { config });
+}
+
+export interface TestLlmResult {
+  ok: boolean;
+  latencyMs: number;
+  protocol: string;
+  model: string;
+  reply?: string;
+  error?: string;
+}
+
+export function apiTestLlm() {
+  return apiPost<TestLlmResult>("/api/admin/config/test-llm");
+}
+
+export interface TestStorageResult {
+  ok: boolean;
+  latencyMs: number;
+  endpoint?: string;
+  bucket?: string;
+  pathStyle?: boolean;
+  error?: string;
+}
+
+export function apiTestStorage() {
+  return apiPost<TestStorageResult>("/api/admin/config/test-storage");
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@platform/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.cjs",
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate-cli.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.16.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.2.0",
+    "docx": "^9.3.0",
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.9.0",
+    "mammoth": "^1.9.0",
+    "pdf-parse": "^1.1.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@platform/shared": "file:../../packages/shared",
+    "@platform/ui": "file:../../packages/ui",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.0.0",
+    "@types/pdf-parse": "^1.1.5",
+    "drizzle-kit": "^0.31.4",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.0"
+  }
+}
