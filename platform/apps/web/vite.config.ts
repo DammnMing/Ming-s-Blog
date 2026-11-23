@@ -4,6 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  css: {
+    // 阻止 Vite 向上递归加载仓库根目录（V0.02 Next.js）的 postcss.config.mjs
+    postcss: { plugins: [] },
+  },
   server: {
     port: 5173,
     proxy: {

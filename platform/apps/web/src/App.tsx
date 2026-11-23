@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout.js";
+import { PersonaProvider } from "./components/PersonaContext.js";
 import { RequireAuth } from "./components/RequireAuth.js";
 import { Landing } from "./pages/Landing.js";
 import { Login } from "./pages/Login.js";
@@ -9,51 +10,57 @@ import { ResumeEditor } from "./pages/ResumeEditor.js";
 import { Settings } from "./pages/Settings.js";
 import { Admin } from "./pages/Admin.js";
 import { PublicResume } from "./pages/PublicResume.js";
+import { ShowcasePortfolio } from "./pages/ShowcasePortfolio.js";
+import { ShowcaseResume } from "./pages/ShowcaseResume.js";
 import { NotFound } from "./pages/NotFound.js";
 
 export function App() {
   return (
-    <Routes>
-      {/* 公共分享页：独立布局（无站内导航） */}
-      <Route path="/r/:slug" element={<PublicResume />} />
-      <Route element={<Layout />}>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="/app"
-          element={
-            <RequireAuth>
-              <AppHome />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/app/resumes/:id/edit"
-          element={
-            <RequireAuth>
-              <ResumeEditor />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/app/settings"
-          element={
-            <RequireAuth>
-              <Settings />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin"
-          element={
-            <RequireAuth>
-              <Admin />
-            </RequireAuth>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Route>
-    </Routes>
+    <PersonaProvider>
+      <Routes>
+        {/* 公共分享页：独立布局（无站内导航） */}
+        <Route path="/r/:slug" element={<PublicResume />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Landing />} />
+          <Route path="/resume" element={<ShowcaseResume />} />
+          <Route path="/portfolio" element={<ShowcasePortfolio />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="/app"
+            element={
+              <RequireAuth>
+                <AppHome />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/app/resumes/:id/edit"
+            element={
+              <RequireAuth>
+                <ResumeEditor />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/app/settings"
+            element={
+              <RequireAuth>
+                <Settings />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth>
+                <Admin />
+              </RequireAuth>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </PersonaProvider>
   );
 }
