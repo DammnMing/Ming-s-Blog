@@ -83,8 +83,8 @@ export function ShowcasePortfolio() {
               className={`px-4 py-2 text-xs sm:text-sm font-mono-tech border transition-colors cursor-pointer ${
                 isDevTheme
                   ? active
-                    ? "bg-white text-black border-white font-medium"
-                    : "bg-transparent text-zinc-400 border-white/15 hover:border-white/40 hover:text-white"
+                    ? "border-blue-400/60 bg-blue-500/20 text-white font-medium"
+                    : "bg-transparent text-slate-400 border-blue-400/20 hover:border-blue-400/50 hover:text-white"
                   : active
                     ? "bg-ink text-paper border-ink"
                     : "bg-transparent text-ink-muted border-hairline hover:border-ink hover:text-ink"

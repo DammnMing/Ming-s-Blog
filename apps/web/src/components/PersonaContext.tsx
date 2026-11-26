@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 
 export type Persona = "aigc" | "dev";
 
@@ -31,8 +32,29 @@ export function PersonaProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.persona = persona;
   }, [persona]);
 
-  const setPersona = (next: Persona) => setPersonaState(next);
-  const togglePersona = () => setPersonaState((prev) => (prev === "aigc" ? "dev" : "aigc"));
+  const setPersona = (next: Persona) => {
+    if (next === persona) return;
+
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> };
+    };
+
+    if (!doc.startViewTransition || prefersReduced) {
+      setPersonaState(next);
+      return;
+    }
+
+    doc.startViewTransition(() => {
+      flushSync(() => {
+        setPersonaState(next);
+      });
+    });
+  };
+
+  const togglePersona = () => setPersona(persona === "aigc" ? "dev" : "aigc");
 
   return (
     <PersonaContext.Provider value={{ persona, setPersona, togglePersona }}>

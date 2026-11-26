@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { usePersona } from "./PersonaContext.js";
+import { PersonaSwitcher } from "./PersonaSwitcher.js";
 import { SHOWCASE_PROFILE, SHOWCASE_PROJECTS } from "../data/showcase.js";
 import { IconClose, IconGithub, IconMail, IconMenu } from "./Icons.js";
 
@@ -19,15 +20,46 @@ const PORTFOLIO_SUBMENU = [
 ];
 
 export function Layout() {
-  const { persona, setPersona } = usePersona();
+  const { persona } = usePersona();
   const { pathname, search } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [portfolioMenuOpen, setPortfolioMenuOpen] = useState(false);
+  const [heroBarOffscreen, setHeroBarOffscreen] = useState(false);
 
   const isHome = pathname === "/";
   const isShowcase = pathname === "/resume" || pathname === "/portfolio";
   const isPublicShowcase = isHome || isShowcase;
   const isDevTheme = isPublicShowcase && persona === "dev";
+
+  // 首页首屏控制带可见时隐藏顶栏切换器，避免同屏出现两套重复切换开关；滑出首屏后再平滑显现
+  useEffect(() => {
+    if (!isHome) {
+      setHeroBarOffscreen(true);
+      return;
+    }
+
+    const barEl = document.getElementById("hero-persona-bar");
+    if (!barEl || typeof IntersectionObserver === "undefined") {
+      setHeroBarOffscreen(false);
+      return;
+    }
+
+    setHeroBarOffscreen(barEl.getBoundingClientRect().bottom <= 64);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        setHeroBarOffscreen(!entry.isIntersecting && entry.boundingClientRect.top < 64);
+      },
+      { rootMargin: "-64px 0px 0px 0px", threshold: 0 }
+    );
+
+    observer.observe(barEl);
+    return () => observer.disconnect();
+  }, [isHome]);
+
+  const showNavSwitcher = !isHome || heroBarOffscreen;
 
   const linkTextCls = (active: boolean) =>
     isDevTheme
@@ -92,7 +124,7 @@ export function Layout() {
                   <div
                     className={`py-1.5 border shadow-xl ${
                       isDevTheme
-                        ? "bg-obsidian-card border-white/15 text-zinc-200"
+                        ? "bg-obsidian-card border-blue-400/20 text-zinc-200"
                         : "bg-paper border-hairline text-ink"
                     }`}
                   >
@@ -128,52 +160,21 @@ export function Layout() {
             </Link>
           </div>
 
-          {/* 桌面端右侧：极简双模式切换胶囊 + GitHub */}
+          {/* 桌面端右侧：首页滚动显现的统一切换器 + GitHub */}
           <div className="hidden md:flex items-center gap-3 lg:gap-4">
-            <div
-              className={`inline-flex p-0.5 border text-xs ${
-                isDevTheme ? "border-white/15 bg-black/40" : "border-hairline bg-paper-alt/70"
-              }`}
-              role="group"
-              aria-label="切换身份视角"
-            >
-              <button
-                type="button"
-                onClick={() => setPersona("aigc")}
-                className={`px-3 py-1.5 transition-colors cursor-pointer ${
-                  persona === "aigc"
-                    ? "bg-ink text-paper font-medium"
-                    : isDevTheme
-                      ? "text-zinc-400 hover:text-white"
-                      : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                漫剧制片
-              </button>
-              <button
-                type="button"
-                onClick={() => setPersona("dev")}
-                className={`px-3 py-1.5 font-mono-tech transition-colors cursor-pointer ${
-                  persona === "dev"
-                    ? isDevTheme
-                      ? "bg-white text-black font-medium"
-                      : "bg-ink text-paper"
-                    : isDevTheme
-                      ? "text-zinc-400 hover:text-white"
-                      : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                全栈开发
-              </button>
-            </div>
+            {showNavSwitcher && (
+              <div className="animate-switcher-in">
+                <PersonaSwitcher variant="compact" />
+              </div>
+            )}
 
             <a
               href={SHOWCASE_PROFILE.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`inline-flex items-center gap-1.5 text-xs font-mono-tech px-3 py-1.5 border transition-colors ${
+              className={`inline-flex items-center gap-1.5 min-h-8 text-xs font-mono-tech px-3 py-1.5 border transition-colors ${
                 isDevTheme
-                  ? "border-white/15 text-zinc-300 hover:border-white/40 hover:text-white"
+                  ? "border-blue-400/25 text-slate-300 hover:border-blue-400/60 hover:text-white"
                   : "border-hairline text-ink-muted hover:border-ink hover:text-ink"
               }`}
             >
@@ -229,37 +230,14 @@ export function Layout() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-current/10">
-              <button
-                type="button"
-                onClick={() => setPersona("aigc")}
-                className={`px-3 py-1.5 text-xs border cursor-pointer ${
-                  persona === "aigc"
-                    ? "bg-ink text-paper border-ink"
-                    : isDevTheme
-                      ? "border-white/15 text-zinc-400"
-                      : "border-hairline text-ink-muted"
-                }`}
-              >
-                漫剧制片
-              </button>
-              <button
-                type="button"
-                onClick={() => setPersona("dev")}
-                className={`px-3 py-1.5 text-xs border font-mono-tech cursor-pointer ${
-                  persona === "dev"
-                    ? "bg-white text-black border-white"
-                    : isDevTheme
-                      ? "border-white/15 text-zinc-400"
-                      : "border-hairline text-ink-muted"
-                }`}
-              >
-                全栈开发
-              </button>
+              <PersonaSwitcher variant="compact" />
               <a
                 href={SHOWCASE_PROFILE.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono-tech border border-current/20"
+                className={`inline-flex items-center gap-1.5 min-h-8 px-3 py-1 text-xs font-mono-tech border ${
+                  isDevTheme ? "border-blue-400/25 text-slate-300" : "border-hairline text-ink-muted"
+                }`}
               >
                 <IconGithub className="w-3.5 h-3.5" /> GitHub
               </a>

@@ -1,7 +1,93 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { ShowcaseProject } from "../data/showcase.js";
 import { IconArrowRight } from "./Icons.js";
+import { PersonaSwitcher } from "./PersonaSwitcher.js";
+
+/**
+ * 首页常驻同构刊头：
+ * - 在 AIGC 与 Dev 两个视角下保持完全一致的容器宽度（max-w-[1440px]）与控制带坐标
+ * - 不随视角切换卸载重挂，保证原地可逆点击、键盘焦点连续以及 IntersectionObserver 稳定
+ */
+export function LandingMasthead({ isDev }: { isDev: boolean }) {
+  return (
+    <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-5 pb-4">
+      <div className="min-h-[3.5rem] sm:min-h-[5rem] lg:min-h-[6.25rem] flex items-end justify-between gap-4 pb-3">
+        <div className="flex items-baseline gap-3 sm:gap-4 min-w-0">
+          <div
+            className={`tracking-[-0.04em] leading-[0.86] text-[clamp(2.75rem,9.2vw,7rem)] select-none ${
+              isDev
+                ? "font-sans-clean font-semibold text-white"
+                : "font-editorial font-semibold text-ink"
+            }`}
+          >
+            SUBMING
+          </div>
+          {isDev && (
+            <span className="hidden sm:inline-block font-mono-tech text-xs sm:text-sm tracking-widest text-electric pb-1">
+              // FULLSTACK
+            </span>
+          )}
+        </div>
+
+        <div
+          className={`text-right font-mono-tech text-[10px] sm:text-[11px] tracking-widest uppercase space-y-1 pb-1 shrink-0 ${
+            isDev ? "text-slate-400" : "text-ink-muted"
+          }`}
+        >
+          {isDev ? (
+            <>
+              <p className="text-electric font-medium">SYS.V04 · 2026</p>
+              <p className="hidden sm:inline-flex items-center gap-2 text-slate-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-electric animate-pulse" aria-hidden />
+                OPEN_TO_WORK · HANGZHOU
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-vermilion font-medium">VOL. 04 · 2026</p>
+              <p className="hidden sm:block">AIGC &amp; ENGINEERING ARCHIVE</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* 1px 细线夹住的唯一首屏控制带（像素级同坐标原地切换） */}
+      <div
+        id="hero-persona-bar"
+        className={`border-t border-b py-2.5 flex flex-wrap items-center justify-between gap-3 ${
+          isDev ? "border-blue-400/20" : "border-ink/25"
+        }`}
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span
+            className={`font-mono-tech text-[11px] tracking-widest uppercase ${
+              isDev ? "text-slate-400" : "text-ink-muted"
+            }`}
+          >
+            PERSPECTIVE
+          </span>
+          <PersonaSwitcher variant="bar" />
+        </div>
+
+        <div
+          className={`font-mono-tech text-[10px] sm:text-[11px] tracking-widest uppercase ${
+            isDev ? "text-slate-400" : "text-ink-muted"
+          }`}
+        >
+          {isDev ? (
+            <>
+              <span className="text-electric">~/subming/engineering</span>
+              <span className="hidden md:inline"> · TS / NEXT / NEST / VUE / PG / DOCKER</span>
+            </>
+          ) : (
+            "HANGZHOU · 400+ EPISODES · -30% COST"
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export interface CustomCoverFrameInput {
   key: string;
@@ -34,7 +120,6 @@ export function AigcMagazineCover({
   headlineTop,
   headlineAccent,
   lead,
-  personaSwitcher,
   onSelectProject,
 }: {
   coverProjects: ShowcaseProject[];
@@ -44,7 +129,6 @@ export function AigcMagazineCover({
   headlineTop: string;
   headlineAccent: string;
   lead: string;
-  personaSwitcher: ReactNode;
   onSelectProject: (project: ShowcaseProject) => void;
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -84,28 +168,7 @@ export function AigcMagazineCover({
 
   return (
     <div className="w-full animate-editorial-in">
-      {/* 1. 巨型艺术刊头 (Masthead) */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-5 pb-4">
-        <div className="flex items-end justify-between gap-4 pb-3">
-          <div className="font-editorial font-semibold tracking-[-0.04em] leading-[0.86] text-[clamp(2.75rem,9.2vw,7rem)] text-ink select-none">
-            SUBMING
-          </div>
-          <div className="text-right font-mono-tech text-[10px] sm:text-[11px] tracking-widest uppercase text-ink-muted space-y-1 pb-1 shrink-0">
-            <p className="text-vermilion font-medium">VOL. 04 · 2026</p>
-            <p className="hidden sm:block">AIGC &amp; ENGINEERING ARCHIVE</p>
-          </div>
-        </div>
-
-        {/* 1px 炭墨细线夹住的刊头元信息条（唯一身份切换入口） */}
-        <div className="border-t border-b border-ink/25 py-2.5 flex flex-wrap items-center justify-between gap-3">
-          <div>{personaSwitcher}</div>
-          <div className="font-mono-tech text-[10px] sm:text-[11px] tracking-widest uppercase text-ink-muted">
-            HANGZHOU · 400+ EPISODES · -30% COST
-          </div>
-        </div>
-      </div>
-
-      {/* 2. 满出血超大主视觉封面画框 */}
+      {/* 满出血超大主视觉封面画框 */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pb-10 sm:pb-12">
         <div className="relative w-full min-h-[480px] sm:min-h-[540px] lg:min-h-[620px] overflow-hidden bg-ink shadow-editorial flex flex-col justify-between p-5 sm:p-8 lg:p-10">
           {activeFrame.imageUrl && !isImgFailed ? (

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { usePersona, type Persona } from "../components/PersonaContext.js";
+import { usePersona } from "../components/PersonaContext.js";
+import { PersonaSwitcher } from "../components/PersonaSwitcher.js";
 import { SHOWCASE_PROFILE, SHOWCASE_RESUMES } from "../data/showcase.js";
 
 export function ShowcaseResume() {
-  const { persona, setPersona } = usePersona();
+  const { persona } = usePersona();
   const [copied, setCopied] = useState(false);
 
   const isAigc = persona === "aigc";
@@ -22,8 +23,6 @@ export function ShowcaseResume() {
       /* ignore */
     }
   };
-
-  const switchRole = (role: Persona) => setPersona(role);
 
   const sectionTitleCls = `text-base sm:text-lg pb-2 mb-5 border-b flex items-center justify-between ${
     isDevTheme
@@ -50,33 +49,14 @@ export function ShowcaseResume() {
 
           <div className="flex flex-wrap items-center gap-3">
             {/* 岗位切换 */}
-            <div className={`inline-flex p-0.5 border text-xs ${isDevTheme ? "border-white/15 bg-black/50" : "border-hairline bg-paper-alt"}`}>
-              <button
-                type="button"
-                onClick={() => switchRole("aigc")}
-                className={`px-3.5 py-2 transition-colors cursor-pointer ${
-                  isAigc ? "bg-ink text-paper font-medium" : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                {aigc.label}
-              </button>
-              <button
-                type="button"
-                onClick={() => switchRole("dev")}
-                className={`px-3.5 py-2 font-mono-tech transition-colors cursor-pointer ${
-                  !isAigc ? "bg-white text-black font-medium" : "text-ink-muted hover:text-ink"
-                }`}
-              >
-                {dev.label}
-              </button>
-            </div>
+            <PersonaSwitcher variant="compact" />
 
             <button
               type="button"
               onClick={() => void handleCopyEmail()}
-              className={`px-4 py-2 text-xs font-mono-tech border cursor-pointer transition-colors ${
+              className={`min-h-8 px-4 py-1.5 text-xs font-mono-tech border cursor-pointer transition-colors ${
                 isDevTheme
-                  ? "border-white/15 text-zinc-300 hover:border-white/40"
+                  ? "border-blue-400/25 text-slate-200 hover:border-blue-400/60 hover:text-white"
                   : "border-hairline text-ink hover:border-ink"
               }`}
             >
@@ -86,8 +66,10 @@ export function ShowcaseResume() {
             <button
               type="button"
               onClick={() => window.print()}
-              className={`px-4 py-2 text-xs font-mono-tech cursor-pointer transition-opacity hover:opacity-85 ${
-                isDevTheme ? "bg-white text-black font-medium" : "bg-ink text-paper"
+              className={`min-h-8 px-4 py-1.5 text-xs font-mono-tech cursor-pointer transition-colors ${
+                isDevTheme
+                  ? "bg-electric text-white hover:bg-blue-400 font-medium"
+                  : "bg-ink text-paper hover:opacity-85"
               }`}
             >
               打印 / 导出 A4 PDF

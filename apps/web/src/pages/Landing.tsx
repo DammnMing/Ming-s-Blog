@@ -1,7 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { usePersona } from "../components/PersonaContext.js";
-import { AigcMagazineCover, DevArchitectureBlueprint, DevProductStage } from "../components/HeroShowcases.js";
+import {
+  AigcMagazineCover,
+  DevArchitectureBlueprint,
+  DevProductStage,
+  LandingMasthead,
+} from "../components/HeroShowcases.js";
 import { ShowcaseProjectModal } from "../components/ShowcaseProjectCard.js";
 import {
   PERSONA_HOME_COPY,
@@ -13,7 +18,7 @@ import {
 import { IconArrowRight, IconMail } from "../components/Icons.js";
 
 export function Landing() {
-  const { persona, setPersona } = usePersona();
+  const { persona } = usePersona();
   const isDev = persona === "dev";
   const copy = PERSONA_HOME_COPY[persona];
   const [selectedProject, setSelectedProject] = useState<ShowcaseProject | null>(null);
@@ -61,48 +66,18 @@ export function Landing() {
       .filter((p): p is ShowcaseProject => Boolean(p));
   }, [isDev]);
 
-  const personaSwitcher = (
-    <div className="flex flex-wrap items-center gap-3">
-      <span
-        className={`font-mono-tech text-[11px] tracking-widest uppercase ${
-          isDev ? "text-zinc-500" : "text-ink-muted"
-        }`}
-      >
-        PERSPECTIVE
-      </span>
-      <div
-        className={`inline-flex p-0.5 border text-xs ${
-          isDev ? "border-white/15 bg-black/55" : "border-hairline bg-paper-alt/80"
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => setPersona("aigc")}
-          className={`px-3 py-1 transition-colors cursor-pointer ${
-            !isDev ? "bg-ink text-paper font-medium" : "text-zinc-400 hover:text-white"
-          }`}
-        >
-          AIGC 漫剧制片
-        </button>
-        <button
-          type="button"
-          onClick={() => setPersona("dev")}
-          className={`px-3 py-1 font-mono-tech transition-colors cursor-pointer ${
-            isDev ? "bg-white text-black font-medium" : "text-ink-muted hover:text-ink"
-          }`}
-        >
-          全栈开发工程师
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div className={isDev ? "bg-obsidian text-zinc-100" : "bg-paper text-ink"}>
-      {/* ========== 1. 双模式强反差首屏 ========== */}
-      {!isDev ? (
-        /* AIGC 模式：《VOGUE / GQ》大刊封面风 */
-        <section className="relative overflow-hidden border-b border-hairline bg-paper-grain">
+      {/* ========== 1. 双模式同构首屏（常驻刊头 + 原地可逆控制带） ========== */}
+      <section
+        className={`relative overflow-hidden border-b ${
+          isDev ? "border-blue-400/15 bg-obsidian-glow" : "border-hairline bg-paper-grain"
+        }`}
+      >
+        <LandingMasthead isDev={isDev} />
+
+        {!isDev ? (
+          /* AIGC 模式：《VOGUE / GQ》大刊封面风 */
           <AigcMagazineCover
             coverProjects={aigcCoverProjects}
             customCoverFrames={aigcCustomFrames}
@@ -110,60 +85,70 @@ export function Landing() {
             headlineTop={copy.headlineTop}
             headlineAccent={copy.headlineAccent}
             lead={copy.lead}
-            personaSwitcher={personaSwitcher}
             onSelectProject={(project) => setSelectedProject(project)}
           />
-        </section>
-      ) : (
-        /* 全栈开发模式：深空蓝黑双视图硬核工作台 */
-        <section className="relative overflow-hidden border-b border-blue-400/15 bg-obsidian-glow">
-          <div className="max-w-7xl mx-auto px-4 sm:px-8 pt-6 pb-14 sm:pt-8 sm:pb-20 lg:pb-24">
-            {/* 极客命令行状态标头（替代重复切换按钮） */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-10 border-b border-blue-400/15 font-mono-tech text-[11px]">
-              <span className="text-slate-400">
-                <span className="text-electric">~/subming/engineering</span>
-                <span className="hidden sm:inline"> · TS / NEXT / NEST / VUE / PG / DOCKER</span>
-              </span>
-              <span className="inline-flex items-center gap-2 text-electric tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-electric animate-pulse" />
-                OPEN_TO_WORK · HANGZHOU
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-center">
-              <div className="md:col-span-5 animate-editorial-in">
-                <p className="font-mono-tech text-xs tracking-widest uppercase text-electric mb-4">
+        ) : (
+          /* 全栈开发模式：统一 1440px 骨架，顶对齐消除左上空洞 */
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-2 pb-12 sm:pb-16 lg:pb-20 animate-editorial-in">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+              <div className="lg:col-span-5 pt-1 lg:pt-3">
+                <p className="inline-flex items-center gap-2 px-2.5 py-1 border border-blue-400/25 bg-blue-500/10 font-mono-tech text-[11px] tracking-widest uppercase text-electric mb-5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-electric" aria-hidden />
                   {copy.badge}
                 </p>
 
-                <h1 className="text-[1.75rem] sm:text-4xl md:text-[2.05rem] lg:text-[2.85rem] xl:text-[3.25rem] font-semibold tracking-tight leading-[1.15] text-white mb-6">
+                <h1 className="text-[1.85rem] sm:text-4xl lg:text-[2.85rem] xl:text-[3.25rem] font-semibold tracking-tight leading-[1.15] text-white mb-5">
                   <span className="block sm:whitespace-nowrap">{copy.headlineTop}</span>
-                  <span className="block mt-2 text-[1.4rem] sm:text-2xl md:text-[1.5rem] lg:text-[2rem] font-normal text-slate-300 sm:whitespace-nowrap">
+                  <span className="block mt-2 text-[1.45rem] sm:text-2xl lg:text-[1.95rem] font-normal text-slate-300 sm:whitespace-nowrap">
                     {copy.headlineAccent}
                   </span>
                 </h1>
 
-                <p className="text-sm sm:text-base leading-relaxed text-slate-400 mb-8 max-w-lg">
+                <p className="text-sm sm:text-base leading-relaxed text-slate-400 mb-7 max-w-lg">
                   {copy.lead}
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3.5">
                   <Link
                     to="/resume"
-                    className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium bg-white text-black transition-opacity hover:opacity-85"
+                    className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium bg-electric text-white hover:bg-blue-400 shadow-[0_0_24px_-6px_rgba(59,130,246,0.65)] transition-colors"
                   >
                     阅读完整简历 <IconArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     to="/portfolio?cat=dev"
-                    className="inline-flex items-center gap-2 px-5 py-3 text-sm border border-blue-400/30 text-slate-200 hover:border-blue-400 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-3 text-sm border border-blue-400/35 bg-blue-500/10 text-slate-100 hover:border-blue-400 hover:bg-blue-500/20 hover:text-white transition-colors"
                   >
                     工程作品集 ↗
                   </Link>
                 </div>
+
+                {/* 工程核心状态指标带：平衡左右高度与技术质感 */}
+                <div className="mt-8 border border-blue-400/20 bg-[#0A1120]/85 divide-y sm:divide-y-0 sm:divide-x divide-blue-400/15 grid grid-cols-1 sm:grid-cols-3">
+                  <div className="px-4 py-3.5">
+                    <p className="font-mono-tech text-[10px] tracking-widest text-slate-400">CONCURRENCY</p>
+                    <p className="font-mono-tech text-lg font-semibold text-white mt-1">30+ 在线</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">日流水 3K+ 生产服务</p>
+                  </div>
+                  <div className="px-4 py-3.5">
+                    <p className="font-mono-tech text-[10px] tracking-widest text-slate-400">BACKEND</p>
+                    <p className="font-mono-tech text-lg font-semibold text-white mt-1">30+ API</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">6 类 Redis 异步队列</p>
+                  </div>
+                  <div className="px-4 py-3.5">
+                    <p className="font-mono-tech text-[10px] tracking-widest text-slate-400">QUALITY</p>
+                    <p className="font-mono-tech text-lg font-semibold text-electric mt-1">96 项全绿</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">自动化验收与脱敏交付</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 px-3.5 py-2 border border-blue-400/15 bg-[#060B16]/80 flex items-center justify-between gap-2 font-mono-tech text-[11px] text-slate-400">
+                  <span className="truncate">CORE: Next 16 · NestJS · Vue 3 · PG · Docker</span>
+                  <span className="text-electric shrink-0">PROD READY</span>
+                </div>
               </div>
 
-              <div className="md:col-span-7">
+              <div className="lg:col-span-7">
                 <DevProductStage
                   projects={devStageProjects}
                   onSelectProject={(project) => setSelectedProject(project)}
@@ -171,8 +156,8 @@ export function Landing() {
               </div>
             </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* ========== 2. 核心战绩横带 ========== */}
       <section
@@ -404,7 +389,7 @@ export function Landing() {
               to="/portfolio"
               className={`inline-flex items-center gap-2 px-5 py-3 text-xs font-mono-tech border transition-colors shrink-0 ${
                 isDev
-                  ? "border-white/25 text-white hover:bg-white hover:text-black"
+                  ? "border-blue-400/35 text-slate-100 hover:border-blue-400 hover:bg-blue-500/15 hover:text-white"
                   : "border-ink text-ink hover:bg-ink hover:text-paper"
               }`}
             >
@@ -623,8 +608,8 @@ export function Landing() {
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link
                   to="/resume"
-                  className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-medium transition-opacity hover:opacity-85 ${
-                    isDev ? "bg-white text-black" : "bg-paper text-ink"
+                  className={`inline-flex items-center gap-2 px-6 py-3.5 text-sm font-medium transition-colors ${
+                    isDev ? "bg-electric text-white hover:bg-blue-400" : "bg-paper text-ink hover:opacity-85"
                   }`}
                 >
                   查看正式简历 <IconArrowRight className="w-4 h-4" />
