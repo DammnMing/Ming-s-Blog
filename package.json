@@ -1,6 +1,6 @@
 {
   "name": "resume-platform",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "description": "SUBMING · 李佳铭个人展示站与简历平台（V0.4）",
   "scripts": {

@@ -2,7 +2,7 @@
 
 > **AIGC 漫剧制片 × 全栈开发工程师** 双风格个人主页、作品集与可打印正式简历，面向未来可扩展为公开多用户简历平台。
 
-- **当前版本**：`v0.4.0`（pnpm Monorepo，已正式提升至仓库根目录）
+- **当前版本**：`v0.4.1`（pnpm Monorepo，已正式提升至仓库根目录）
 - **历史版本归档**：V0.02（原 Next.js 16 + Vercel Blob 单体版）已通过 Git 分支 `archive/v0.2` 与标签 `V0.02` 永久归档。
 
 ---
@@ -41,7 +41,7 @@ My-Blog/
 ├── scripts/                 # 自动化脚本（doc-index.mjs 等）
 ├── archive/                 # 历史容器方案留档（archive/docker）
 ├── vercel.json              # Vercel 纯前端主站构建与 SPA 路由重写配置
-└── package.json             # pnpm workspace 根配置（v0.4.0）
+└── package.json             # pnpm workspace 根配置（v0.4.1）
 ```
 
 ---
